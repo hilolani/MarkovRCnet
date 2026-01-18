@@ -1,6 +1,5 @@
 from .sparse import (
-    to_csr_safe,
-    SafeCSR,
+    safeCSR,
 )
 
 from .logging import (
@@ -12,7 +11,6 @@ from .colab import (
 )
 
 __all__ = [
-    "to_csr_safe",
     "SafeCSR",
     "resolve_logger",
     "fileOnColab",
