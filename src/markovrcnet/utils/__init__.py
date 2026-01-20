@@ -1,5 +1,5 @@
 from .sparse import (
-    safeCSR,
+    SafeCSR,
 )
 
 from .logging import (
