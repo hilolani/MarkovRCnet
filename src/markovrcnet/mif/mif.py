@@ -6,7 +6,7 @@ import itertools
 from typing import Optional
 
 from markovrcnet.utils.logging import resolve_logger
-
+from markovrcnet.io import load_adjacency
 
 CONST_COEFFICIENT_ARRAY = (1, 1.618033988749895, 1.8392867552141607, 1.9275619754829254, 1.9659482366454855, 1.9835828434243263, 1.9919641966050354, 1.9960311797354144, 1.9980294702622872, 1.9990186327101014)
 
