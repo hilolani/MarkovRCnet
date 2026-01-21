@@ -11,6 +11,7 @@ from scipy.sparse import csr_matrix, csc_matrix, coo_matrix
 from markovrcnet.utils.logging import resolve_logger
 from markovrcnet.utils.sparse import SafeCSR
 from markovrcnet.io.save_matrix import save_safe_csr_to_mtx
+from markovrcnet.io import load_adjacency
 
 
 def prepro(adjacencymatrixchecked, logger = None):
