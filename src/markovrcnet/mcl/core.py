@@ -107,7 +107,7 @@ def get_soft_clusters_proto(adjacencymatrixchecked, threshold=1e-6, eps=1e-12, l
     return convergence,clusinfo, clustersatthisstep
 
 def mclprocess(adjacencymatrixchecked, stepnum = 20, logger = None):
-    A = load_adjacency(adjacencymatrix)
+    A = load_adjacency(adjacencymatrixchecked)
     log = resolve_logger(logger, "mcl")
     steps = 0
     stmat = inflation(expansion(rescaling(prepro(A))))
