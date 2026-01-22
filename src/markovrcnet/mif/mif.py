@@ -7,15 +7,32 @@ from typing import Optional
 
 from markovrcnet.utils.logging import resolve_logger
 from markovrcnet.io import load_adjacency
+from markovrcnet.utils.sparse import SafeCSR
 
 CONST_COEFFICIENT_ARRAY = (1, 1.618033988749895, 1.8392867552141607, 1.9275619754829254, 1.9659482366454855, 1.9835828434243263, 1.9919641966050354, 1.9960311797354144, 1.9980294702622872, 1.9990186327101014)
 
+def _prepare_adj_matrix(adjacencymatrixchecked):
+    if isinstance(adjacencymatrixchecked, SafeCSR):
+        return adjacencymatrixchecked.copy()
+    else:
+        return load_adjacency(adjacencymatrixchecked)
 
-def MiF_ZeroBasedIndex(adjacencymatrixchecked, x, y, beta, gamma, logger=None):
+def MiF_ZeroBasedIndex(adj_matrix, x, y, beta, gamma, logger=None):
+    """
+    Internal function.
+    Parameters
+    ----------
+    adj_matrix : SafeCSR
+        Prepared adjacency matrix. Do NOT pass a path or raw object.
+    """
+    assert isinstance(adj_matrix, SafeCSR), (
+        "MiF_ZeroBasedIndex expects a SafeCSR adjacency matrix. "
+        "If you want to input a file path, use MiF(..., index_base=0)."
+    )
     log = resolve_logger(logger, "MiF")
     val = 0
     coefficientlist = list(CONST_COEFFICIENT_ARRAY)
-    adj_matrix = adjacencymatrixchecked
+    #adj_matrix = adjacencymatrixchecked
     alphalist = [(1 / coefficientlist[gamma]) ** (i + 1) for i in range(0, gamma + 1)]
     i = None
     tmat = {0: adj_matrix}
@@ -32,12 +49,23 @@ def MiF_ZeroBasedIndex(adjacencymatrixchecked, x, y, beta, gamma, logger=None):
             val += numerator / denominator
     return val
 
-def MiF_OneBasedIndex(adjacencymatrixchecked, x, y, beta, gamma, logger=None):
+def MiF_OneBasedIndex(adj_matrix, x, y, beta, gamma, logger=None):
+    """
+    Internal function.
+    Parameters
+    ----------
+    adj_matrix : SafeCSR
+        Prepared adjacency matrix. Do NOT pass a path or raw object.
+    """
+    assert isinstance(adj_matrix, SafeCSR), (
+        "MiF_OneBasedIndex expects a SafeCSR adjacency matrix. "
+        "If you want to input a file path, use MiF(..., index_base=1)."
+    )
     log = resolve_logger(logger, "MiF")
     val = 0
     coefficientlist = list(CONST_COEFFICIENT_ARRAY)
-    log.info(f"Here, all integer values are assumed to be 1-based indexes, i.e. data and parameters --including node numbers and gamma-- that are counted starting from 1.In other words, it is assumed that a sparse matrix with a 1-based index created in MATLAB, Mathematica, Julia, Fortran, R, etc. was input here.")
-    adj_matrix = adjacencymatrixchecked
+    log.info(f"Here, all integer values are assumed to be 1-based indexes, i.e. data and parameters --including numbers and gamma-- that are counted starting from 1.In other words, it is assumed that a sparse matrix with a 1-based index created in MATLAB, Mathematica, Julia, Fortran, R, etc. was input here.")
+    #adj_matrix = adjacencymatrixchecked
     alphalist = [(1 / coefficientlist[gamma - 1]) ** (i + 1) for i in range(0, gamma)]
     i = None
     tmat = {0: adj_matrix}
@@ -56,15 +84,27 @@ def MiF_OneBasedIndex(adjacencymatrixchecked, x, y, beta, gamma, logger=None):
 
 def MiF(adjacencymatrixchecked, x, y, beta, gamma,index_base = 0, gamma_threshold = 10, logger=None):
     log = resolve_logger(logger, "MiF")
+    adj_matrix = _prepare_adj_matrix(adjacencymatrixchecked)
     if index_base == 0:
-        return MiF_ZeroBasedIndex(adjacencymatrixchecked, x, y, beta, gamma,logger)
+        return MiF_ZeroBasedIndex(adj_matrix, x, y, beta, gamma,logger)
     elif index_base == 1:
-        return MiF_OneBasedIndex(adjacencymatrixchecked, x, y, beta, gamma,logger)
+        return MiF_OneBasedIndex(adj_matrix, x, y, beta, gamma,logger)
 
-def MiF_broadcast_withloop(adjacencymatrixchecked, startingvertex, beta = 0.5, gamma_threshold = 10, logger=None):
+def MiF_broadcast_withloop(adj_matrix, startingvertex, beta = 0.5, gamma_threshold = 10, logger=None):
+    """
+    Internal function.
+    Parameters
+    ----------
+    adj_matrix : SafeCSR
+        Prepared adjacency matrix. Do NOT pass a path or raw object.
+    """
+    assert isinstance(adj_matrix, SafeCSR), (
+        "MiF_broadcast_withloop expects a SafeCSR adjacency matrix. "
+        "If you want to input a file path, use MiF_broadcast(..., index_base=1)."
+    )
     np.set_printoptions(precision=10, floatmode='fixed')
     log = resolve_logger(logger, "MiF")
-    adj_matrix = adjacencymatrixchecked
+    #adj_matrix = adjacencymatrixchecked
     Gobj = nx.from_scipy_sparse_array(adj_matrix)
     degdicformat = nx.degree(Gobj)
     deglst =list([degdicformat[i] for i in range(0,len(degdicformat))])
@@ -81,8 +121,8 @@ def MiF_broadcast_withloop(adjacencymatrixchecked, startingvertex, beta = 0.5, g
        gammaval = 0
        while gammaval < gamma_threshold:
           mifsteps = [[startingvertex, MiF(adj_matrix, startingvertex, j, beta, gammaval)] for j in targettednodes]
-          all_targets = range(len(deglst))  
-          other_targets = [t for t in all_targets if t != startingvertex]  
+          all_targets = range(len(deglst))
+          other_targets = [t for t in all_targets if t != startingvertex]
           reached = [[startingvertex, target_id, val] for target_id, (_, val) in zip(other_targets, mifsteps) if val != 0.0]
           log.info(f"The  number of reached nodes: {len(reached)}")
           log.info(f"Reached vertices information: {reached}")
@@ -93,9 +133,20 @@ def MiF_broadcast_withloop(adjacencymatrixchecked, startingvertex, beta = 0.5, g
              return reached
              break
 
-def MiF_broadcast_withoutloop(adjacencymatrixchecked, startingvertex, beta = 0.5, gamma_threshold = 10, logger=None):
+def MiF_broadcast_withoutloop(adj_matrix, startingvertex, beta = 0.5, gamma_threshold = 10, logger=None):
+    """
+    Internal function.
+    Parameters
+    ----------
+    adj_matrix : SafeCSR
+        Prepared adjacency matrix. Do NOT pass a path or raw object.
+    """
+    assert isinstance(adj_matrix, SafeCSR), (
+        "MiF_broadcast_withoutloop expects a SafeCSR adjacency matrix. "
+        "If you want to input a file path, use MiF_broadcast(..., loop=0)."
+    )
     log = resolve_logger(logger, "MiF")
-    adj_matrix = adjacencymatrixchecked
+    #adj_matrix = adjacencymatrixchecked
     Gobj = nx.from_scipy_sparse_array(adj_matrix)
     degdicformat = nx.degree(Gobj)
     deglst =list([degdicformat[i] for i in range(0,len(degdicformat))])
@@ -137,10 +188,11 @@ def MiF_broadcast_withoutloop(adjacencymatrixchecked, startingvertex, beta = 0.5
 
 def MiF_broadcast(adjacencymatrixchecked, startingvertex, beta = 0.5, gamma_threshold = 10, loop = 0,logger=None):
     log = resolve_logger(logger, "MiF")
+    adj_matrix = _prepare_adj_matrix(adjacencymatrixchecked)
     if loop == 0:
-        return MiF_broadcast_withoutloop(adjacencymatrixchecked, startingvertex, beta, gamma_threshold,logger)
+        return MiF_broadcast_withoutloop(adj_matrix, startingvertex, beta, gamma_threshold,logger)
     elif loop == 1:
-        return MiF_broadcast_withloop(adjacencymatrixchecked, startingvertex, beta, gamma_threshold,logger)
+        return MiF_broadcast_withloop(adj_matrix, startingvertex, beta, gamma_threshold,logger)
 
 def MiF_broadcast_diff_on_loop(result_withloop, result_withoutloop, logger=None):
     log = resolve_logger(logger, "MiF")
@@ -156,12 +208,23 @@ def MiF_broadcast_diff_on_loop(result_withloop, result_withoutloop, logger=None)
                 'withoutloop_value': row1[2],
                 "value diffrerence": row0[2] - row1[2]
             })
-    log.info(f"The list of difference betweeen MiF_broadcast with and without loop: {diff_positions}")    
+    log.info(f"The list of difference betweeen MiF_broadcast with and without loop: {diff_positions}")
     return diff_positions
-    
-def MiFDI_withloop(adjacencymatrixchecked, startingvertices = "min", dangn = 0, beta = 0.2, gamma_threshold = 10, allstartinginfo = 0, logger=None):
+
+def MiFDI_withloop(adj_matrix, startingvertices = "min", dangn = 0, beta = 0.2, gamma_threshold = 10, allstartinginfo = 0, logger=None):
+    """
+    Internal function.
+    Parameters
+    ----------
+    adj_matrix : SafeCSR
+        Prepared adjacency matrix. Do NOT pass a path or raw object.
+    """
+    assert isinstance(adj_matrix, SafeCSR), (
+        "MiFDI_withloop expects a SafeCSR adjacency matrix. "
+        "If you want to input a file path, use MiFDI(..., loop=1)."
+    )
   log = resolve_logger(logger, "MiF")
-  adj_matrix = adjacencymatrixchecked
+  #adj_matrix = adjacencymatrixchecked
   Gobj = nx.from_scipy_sparse_array(adj_matrix)
   degdicformat = nx.degree(Gobj)
   deglst =list([degdicformat[i] for i in range(0,len(degdicformat))])
@@ -216,7 +279,6 @@ def MiFDI_withloop(adjacencymatrixchecked, startingvertices = "min", dangn = 0, 
          allresultlist_i = allresultlist_i + allresult_i
          allresultlist_i = [list(t) for t in list(dict.fromkeys(tuple(row) for row in sorted(allresultlist_i)))]
          log.info(f"semifinal allresult for {startingnodes[i]}: {allresultlist_i}")
-         
          if len(mifsteps) == len(reached):
              log.info(f"Gamma reached the maximum values, since all the nodes have been reached from the starting node {startingnodes[i]}.")
              allresultlist_i = allresultlist_i + allresult_i
@@ -234,16 +296,27 @@ def MiFDI_withloop(adjacencymatrixchecked, startingvertices = "min", dangn = 0, 
   if dangn ==0 or dangn <=len(startingnodes):
       if allstartinginfo == 0:
           return allresultlist[dangn], mifdilist[dangn]
-      else:    
+      else:
           return allresultlist, mifdilist
   else:
      msg = f"the dangn value has something wrong."
      log.error(msg)
-     raise TypeError(msg)    
+     raise TypeError(msg)
 
-def MiFDI_withoutloop(adjacencymatrixchecked, startingvertices = "min", dangn = 0, beta = 0.2, gamma_threshold = 10, allstartinginfo = 0, logger=None):
+def MiFDI_withoutloop(adj_matrix, startingvertices = "min", dangn = 0, beta = 0.2, gamma_threshold = 10, allstartinginfo = 0, logger=None):
+    """
+    Internal function.
+    Parameters
+    ----------
+    adj_matrix : SafeCSR
+        Prepared adjacency matrix. Do NOT pass a path or raw object.
+    """
+    assert isinstance(adj_matrix, SafeCSR), (
+        "MiFDI_withoutloop expects a SafeCSR adjacency matrix. "
+        "If you want to input a file path, use MiFDI(..., loop=1)."
+    )
   log = resolve_logger(logger, "MiF")
-  adj_matrix = adjacencymatrixchecked
+  #adj_matrix = adjacencymatrixchecked
   Gobj = nx.from_scipy_sparse_array(adj_matrix)
   degdicformat = nx.degree(Gobj)
   deglst =list([degdicformat[i] for i in range(0,len(degdicformat))])
@@ -329,20 +402,20 @@ def MiFDI_withoutloop(adjacencymatrixchecked, startingvertices = "min", dangn = 
   if dangn ==0 or dangn <=len(startingnodes):
       if allstartinginfo == 0:
           return allresultlist[dangn], mifdilist[dangn]
-      else:    
+      else:
           return allresultlist, mifdilist
   else:
      msg = f"the dangn value has something wrong."
      log.error(msg)
-     raise TypeError(msg)    
+     raise TypeError(msg)
 
-      
 def MiFDI(adjacencymatrixchecked, startingvertices="min", dangn = 0, beta = 0.2, gamma_threshold = 10, allstartinginfo = 0, loop = 0, logger=None):
+    adj_matrix = _prepare_adj_matrix(adjacencymatrixchecked)
     log = resolve_logger(logger, "MiF")
     if loop == 0:
-        return MiFDI_withoutloop(adjacencymatrixchecked, startingvertices, dangn, beta, gamma_threshold, allstartinginfo, logger)
+        return MiFDI_withoutloop(adj_matrix, startingvertices, dangn, beta, gamma_threshold, allstartinginfo, logger)
     elif loop == 1:
-        return MiFDI_withloop(adjacencymatrixchecked, startingvertices, dangn, beta, gamma_threshold, allstartinginfo, logger)
+        return MiFDI_withloop(adj_matrix, startingvertices, dangn, beta, gamma_threshold, allstartinginfo, logger)
 
 def MiFDI_diff_on_loop(*args, **kwargs):
     return MiF_broadcast_diff_on_loop(*args, **kwargs)
