@@ -61,7 +61,7 @@ def hadamardpower(adjacencymatrixchecked, logger = None):
         adj_matrix = adjacencymatrixchecked
     else:
         adj_matrix = load_adjacency(adjacencymatrixchecked)
-　　adj_matrix_original = adj_matrix.copy()
+    adj_matrix_original = adj_matrix.copy()
     #adj_matrix = adjacencymatrixchecked.copy()
     hd = np.square(adj_matrix.data)
     #hd = np.square(adjacencymatrixchecked.data)
