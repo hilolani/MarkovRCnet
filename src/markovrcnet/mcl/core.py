@@ -48,10 +48,10 @@ def expansion(adjacencymatrixchecked, logger = None):
         adj_matrix = adjacencymatrixchecked
     else:
         adj_matrix = load_adjacency(adjacencymatrixchecked)
-　　adj_matrix_original = adj_matrix.copy()
-    # The original was adj_matrix = adjacencymatrixchecked.copy()
+    adj_matrix_original = adj_matrix.copy()
+    #adj_matrix = adjacencymatrixchecked.copy()
     expanded_adj_matrix = adj_matrix @ adj_matrix
-    # The original was expanded_adj_matrix = adjacencymatrixchecked @ adj_matrix
+    #expanded_adj_matrix = adjacencymatrixchecked @ adj_matrix
     log.info(f"expansion done.")
     return expanded_adj_matrix
 
@@ -62,9 +62,9 @@ def hadamardpower(adjacencymatrixchecked, logger = None):
     else:
         adj_matrix = load_adjacency(adjacencymatrixchecked)
 　　adj_matrix_original = adj_matrix.copy()
-    #The original was adj_matrix = adjacencymatrixchecked.copy()
+    #adj_matrix = adjacencymatrixchecked.copy()
     hd = np.square(adj_matrix.data)
-    # The original was hd = np.square(adjacencymatrixchecked.data)
+    #hd = np.square(adjacencymatrixchecked.data)
     adj_matrix.data = hd
     log.info(f"hadamard power computed.")
     return adj_matrix
@@ -76,7 +76,7 @@ def inflation(adjacencymatrixchecked, logger = None):
     else:
         adj_matrix = load_adjacency(adjacencymatrixchecked)
     adj_matrix_original = adj_matrix.copy()
-    #The original was adj_matrix = adjacencymatrixchecked.copy()
+    #adj_matrix = adjacencymatrixchecked.copy()
     hadamarded = hadamardpower(adj_matrix)
     inflated = rescaling(hadamarded)
     log.info(f"inflation done.")
@@ -89,7 +89,7 @@ def normalizedq(adjacencymatrixchecked, logger = None):
     else:
         adj_matrix = load_adjacency(adjacencymatrixchecked)
     adj_matrix_original = adj_matrix.copy()
-    # The original was adj_matrix =adjacencymatrixchecked.copy()
+    #adj_matrix =adjacencymatrixchecked.copy()
     col_sums = np.array(adj_matrix.sum(axis=0)).ravel()
     if np.allclose(col_sums, 1.0, atol=1e-12, rtol=0.0):
         log.info(f"Rescaled.")
@@ -106,7 +106,7 @@ def get_soft_clusters_proto(adjacencymatrixchecked, threshold=1e-6, eps=1e-12, l
     else:
         adj_matrix = load_adjacency(adjacencymatrixchecked)
     adj_matrix_original = adj_matrix.copy()
-    # The original was adj_matrix = adjacencymatrixchecked.copy()
+    #adj_matrix = adjacencymatrixchecked.copy()
     adj_matrix_csc = adj_matrix if isinstance(adj_matrix, csc_matrix) else adj_matrix.tocsc(copy=False)
     col_sums = np.array(adj_matrix_csc.sum(axis=0)).ravel()
     zero_rows =np.where(adj_matrix_csc.getnnz(axis=1) == 0)[0]
@@ -147,10 +147,11 @@ def mclprocess(adjacencymatrixchecked, stepnum = 20, logger = None):
         adj_matrix = adjacencymatrixchecked
     else:
         adj_matrix = load_adjacency(adjacencymatrixchecked)
-    # The original was A = load_adjacency(adjacencymatrixchecked)
+    #A = load_adjacency(adjacencymatrixchecked)
     log = resolve_logger(logger, "mcl")
     steps = 0
-    stmat = inflation(expansion(rescaling(prepro(A))))
+    stmat = inflation(expansion(rescaling(prepro(adj_matrix))))
+    #stmat = inflation(expansion(rescaling(prepro(A))))
     rwmat = stmat
     while steps < stepnum:
         convergence, clusinfo, clustersatthisstep = get_soft_clusters_proto(rwmat)
