@@ -223,85 +223,85 @@ def MiFDI_withloop(adj_matrix, startingvertices = "min", dangn = 0, beta = 0.2, 
         "MiFDI_withloop expects a SafeCSR adjacency matrix. "
         "If you want to input a file path, use MiFDI(..., loop=1)."
     )
-  log = resolve_logger(logger, "MiF")
-  #adj_matrix = adjacencymatrixchecked
-  Gobj = nx.from_scipy_sparse_array(adj_matrix)
-  degdicformat = nx.degree(Gobj)
-  deglst =list([degdicformat[i] for i in range(0,len(degdicformat))])
-  alllistednodes = range(0,len(degdicformat))
-  if startingvertices == "min":
-      smallestdegval = min(deglst)
-      mindegnodes = [i for i, x in enumerate(deglst) if x == min(deglst)]
-      log.info(f"the smallest degree: {smallestdegval}")
-      log.info(f"the node numbers with the smallest degree : {mindegnodes}")
-      startingnodes = mindegnodes
-  elif startingvertices == "max":
-      largestdegval = max(deglst)
-      maxdegnodes = [i for i, x in enumerate(deglst) if x == max(deglst)]
-      log.info(f"the largest degree: {largestdegval}")
-      log.info(f"the node numbers with the largest degree : {maxdegnodes}")
-      startingnodes = maxdegnodes
-  if dangn > 0 and dangn <=len(startingnodes):
-     log.info(f"There are multiple nodes for starting: {startingnodes}, so you can choose one starting node to be focused.")
-  elif dangn == 0:
-     log.info(f"There is only a single node for starting: {startingnodes}")
-  else:
-     msg = f"the dangn value exceeds the number of the starting nodes."
-     log.error(msg)
-     raise TypeError(msg)
-  gammaval = 0
-  logmifmeanlist =[]
-  focusedstarting = startingnodes[dangn]
-  log.info(f"The focused starting node is: {focusedstarting}")
-  all_targets = range(len(deglst))
-  allresultlist = []
-  allresultlist_i = []
-  mifdilist = []
-  for i in range(0, len(startingnodes)):
+    log = resolve_logger(logger, "MiF")
+    #adj_matrix = adjacencymatrixchecked
+    Gobj = nx.from_scipy_sparse_array(adj_matrix)
+    degdicformat = nx.degree(Gobj)
+    deglst =list([degdicformat[i] for i in range(0,len(degdicformat))])
+    alllistednodes = range(0,len(degdicformat))
+    if startingvertices == "min":
+        smallestdegval = min(deglst)
+        mindegnodes = [i for i, x in enumerate(deglst) if x == min(deglst)]
+        log.info(f"the smallest degree: {smallestdegval}")
+        log.info(f"the node numbers with the smallest degree : {mindegnodes}")
+        startingnodes = mindegnodes
+    elif startingvertices == "max":
+        largestdegval = max(deglst)
+        maxdegnodes = [i for i, x in enumerate(deglst) if x == max(deglst)]
+        log.info(f"the largest degree: {largestdegval}")
+        log.info(f"the node numbers with the largest degree : {maxdegnodes}")
+        startingnodes = maxdegnodes
+    if dangn > 0 and dangn <=len(startingnodes):
+        log.info(f"There are multiple nodes for starting: {startingnodes}, so you can choose one starting node to be focused.")
+    elif dangn == 0:
+        log.info(f"There is only a single node for starting: {startingnodes}")
+    else:
+        msg = f"the dangn value exceeds the number of the starting nodes."
+        log.error(msg)
+        raise TypeError(msg)
     gammaval = 0
-    while gammaval < gamma_threshold:
-         other_targets = [t for t in all_targets if t != startingnodes[i]]
-         log.info(f"Starting node of this step {gammaval}: {startingnodes[i]}")
-         log.info(f"Othertargest for the starting node {startingnodes[i]}:{other_targets}")
-         mifsteps = [[startingnodes[i], MiF(adj_matrix, startingnodes[i], j, beta, gammaval)] for j in other_targets]
-         log.info(f"MiF steps for the starting node {startingnodes[i]}: {mifsteps}")
-         log.info(f"The  number of MiF steps for the starting node {startingnodes[i]}: {len(mifsteps)}")
-         reached = [[startingnodes[i], target_id, val] for target_id, (_, val) in zip(other_targets, mifsteps) if val != 0.0]
-         log.info(f"reached nodes for the starting node {startingnodes[i]}: {reached}")
-         log.info(f"The  number of reached nodes for the starting node {startingnodes[i]}: {len(reached)}")
-         logresultinfo_tmp =  [[i[0], i[1], math.log(i[2])] for i in reached]
-         log.info(f"Current gamma for the starting node {startingnodes[i]}: {gammaval}, [Starting node, Reached node, Log(MiF)]: {logresultinfo_tmp}")
-         logresultinfo = [[x[0], x[1] - startingnodes.index(x[0]) *  len(other_targets), x[2]] for i, x in enumerate(logresultinfo_tmp)]
-         meanlog =  np.mean([logresultinfo[l][2] for l in range(len(logresultinfo))])
-         log.info(f"Current gamma for the starting node {startingnodes[i]}: {gammaval}, Mean of the Log(MiF): {meanlog} for the starting node {startingnodes[i]}")
-         logmifmeanlist.append(meanlog)
-         allresult_i = sorted(logresultinfo + [[startingnodes[i], startingnodes[i], 0.0]],  key=lambda x: x[1])
-         allresultlist_i = allresultlist_i + allresult_i
-         allresultlist_i = [list(t) for t in list(dict.fromkeys(tuple(row) for row in sorted(allresultlist_i)))]
-         log.info(f"semifinal allresult for {startingnodes[i]}: {allresultlist_i}")
-         if len(mifsteps) == len(reached):
-             log.info(f"Gamma reached the maximum values, since all the nodes have been reached from the starting node {startingnodes[i]}.")
-             allresultlist_i = allresultlist_i + allresult_i
-             allresultlist_i = [list(t) for t in list(dict.fromkeys(tuple(row) for row in sorted(allresultlist_i)))]
-             allresult_i = sorted(logresultinfo_tmp + [[startingnodes[i], startingnodes[i], 0.0]],  key=lambda x: x[1])
-             log.info(f"final allresult for {startingnodes[i]}: {allresult_i}")
-             mifval_i = [x[2] for i, x in enumerate(allresult_i)]
-             log.info(f"mifval_i : {mifval_i}")
-             log.info(f"final MiFDI value for {startingnodes[i]}: {mifval_i} for the starting node {startingnodes[i]}.")
-             allresultlist = allresultlist + [allresult_i]
-             mifdilist = mifdilist + [mifval_i]
-             i = i + 1
-             break
-         gammaval = gammaval + 1
-  if dangn ==0 or dangn <=len(startingnodes):
-      if allstartinginfo == 0:
-          return allresultlist[dangn], mifdilist[dangn]
-      else:
-          return allresultlist, mifdilist
-  else:
-     msg = f"the dangn value has something wrong."
-     log.error(msg)
-     raise TypeError(msg)
+    logmifmeanlist =[]
+    focusedstarting = startingnodes[dangn]
+    log.info(f"The focused starting node is: {focusedstarting}")
+    all_targets = range(len(deglst))
+    allresultlist = []
+    allresultlist_i = []
+    mifdilist = []
+    for i in range(0, len(startingnodes)):
+        gammaval = 0
+        while gammaval < gamma_threshold:
+            other_targets = [t for t in all_targets if t != startingnodes[i]]
+            log.info(f"Starting node of this step {gammaval}: {startingnodes[i]}")
+            log.info(f"Othertargest for the starting node {startingnodes[i]}:{other_targets}")
+            mifsteps = [[startingnodes[i], MiF(adj_matrix, startingnodes[i], j, beta, gammaval)] for j in other_targets]
+            log.info(f"MiF steps for the starting node {startingnodes[i]}: {mifsteps}")
+            log.info(f"The  number of MiF steps for the starting node {startingnodes[i]}: {len(mifsteps)}")
+            reached = [[startingnodes[i], target_id, val] for target_id, (_, val) in zip(other_targets, mifsteps) if val != 0.0]
+            log.info(f"reached nodes for the starting node {startingnodes[i]}: {reached}")
+            log.info(f"The  number of reached nodes for the starting node {startingnodes[i]}: {len(reached)}")
+            logresultinfo_tmp =  [[i[0], i[1], math.log(i[2])] for i in reached]
+            log.info(f"Current gamma for the starting node {startingnodes[i]}: {gammaval}, [Starting node, Reached node, Log(MiF)]: {logresultinfo_tmp}")
+            logresultinfo = [[x[0], x[1] - startingnodes.index(x[0]) *  len(other_targets), x[2]] for i, x in enumerate(logresultinfo_tmp)]
+            meanlog =  np.mean([logresultinfo[l][2] for l in range(len(logresultinfo))])
+            log.info(f"Current gamma for the starting node {startingnodes[i]}: {gammaval}, Mean of the Log(MiF): {meanlog} for the starting node {startingnodes[i]}")
+            logmifmeanlist.append(meanlog)
+            allresult_i = sorted(logresultinfo + [[startingnodes[i], startingnodes[i], 0.0]],  key=lambda x: x[1])
+            allresultlist_i = allresultlist_i + allresult_i
+            allresultlist_i = [list(t) for t in list(dict.fromkeys(tuple(row) for row in sorted(allresultlist_i)))]
+            log.info(f"semifinal allresult for {startingnodes[i]}: {allresultlist_i}")
+            if len(mifsteps) == len(reached):
+                log.info(f"Gamma reached the maximum values, since all the nodes have been reached from the starting node {startingnodes[i]}.")
+                allresultlist_i = allresultlist_i + allresult_i
+                allresultlist_i = [list(t) for t in list(dict.fromkeys(tuple(row) for row in sorted(allresultlist_i)))]
+                allresult_i = sorted(logresultinfo_tmp + [[startingnodes[i], startingnodes[i], 0.0]],  key=lambda x: x[1])
+                log.info(f"final allresult for {startingnodes[i]}: {allresult_i}")
+                mifval_i = [x[2] for i, x in enumerate(allresult_i)]
+                log.info(f"mifval_i : {mifval_i}")
+                log.info(f"final MiFDI value for {startingnodes[i]}: {mifval_i} for the starting node {startingnodes[i]}.")
+                allresultlist = allresultlist + [allresult_i]
+                mifdilist = mifdilist + [mifval_i]
+                i = i + 1
+                break
+            gammaval = gammaval + 1
+    if dangn ==0 or dangn <=len(startingnodes):
+        if allstartinginfo == 0:
+            return allresultlist[dangn], mifdilist[dangn]
+        else:
+            return allresultlist, mifdilist
+    else:
+        msg = f"the dangn value has something wrong."
+        log.error(msg)
+        raise TypeError(msg)
 
 def MiFDI_withoutloop(adj_matrix, startingvertices = "min", dangn = 0, beta = 0.2, gamma_threshold = 10, allstartinginfo = 0, logger=None):
     """
@@ -315,99 +315,99 @@ def MiFDI_withoutloop(adj_matrix, startingvertices = "min", dangn = 0, beta = 0.
         "MiFDI_withoutloop expects a SafeCSR adjacency matrix. "
         "If you want to input a file path, use MiFDI(..., loop=1)."
     )
-  log = resolve_logger(logger, "MiF")
-  #adj_matrix = adjacencymatrixchecked
-  Gobj = nx.from_scipy_sparse_array(adj_matrix)
-  degdicformat = nx.degree(Gobj)
-  deglst =list([degdicformat[i] for i in range(0,len(degdicformat))])
-  alllistednodes = range(0,len(degdicformat))
-  if startingvertices == "min":
-      smallestdegval = min(deglst)
-      mindegnodes = [i for i, x in enumerate(deglst) if x == min(deglst)]
-      log.info(f"the smallest degree: {smallestdegval}")
-      log.info(f"the node numbers with the smallest degree : {mindegnodes}")
-      startingnodes = mindegnodes
-  elif startingvertices == "max":
-      largestdegval = max(deglst)
-      maxdegnodes = [i for i, x in enumerate(deglst) if x == max(deglst)]
-      log.info(f"the largest degree: {largestdegval}")
-      log.info(f"the node numbers with the largest degree : {maxdegnodes}")
-      startingnodes = maxdegnodes
-  if dangn > 0 and dangn <=len(startingnodes):
-     log.info(f"There are multiple nodes for starting: {startingnodes}, so you can choose one starting node to be focused.")
-  elif dangn == 0:
-     log.info(f"There is only a single node for starting: {startingnodes}")
-  else:
-     msg = f"the dangn value exceeds the number of the starting nodes."
-     log.error(msg)
-     raise TypeError(msg)
-  gammaval = 0
-  logmifmeanlist =[]
-  focusedstarting = startingnodes[dangn]
-  log.info(f"The focused starting node is: {focusedstarting}")
-  all_targets = range(len(deglst))
-  allresultlist = []
-  mifdilist = []
-  for i in range(0, len(startingnodes)):
+    log = resolve_logger(logger, "MiF")
+    #adj_matrix = adjacencymatrixchecked
+    Gobj = nx.from_scipy_sparse_array(adj_matrix)
+    degdicformat = nx.degree(Gobj)
+    deglst =list([degdicformat[i] for i in range(0,len(degdicformat))])
+    alllistednodes = range(0,len(degdicformat))
+    if startingvertices == "min":
+        smallestdegval = min(deglst)
+        mindegnodes = [i for i, x in enumerate(deglst) if x == min(deglst)]
+        log.info(f"the smallest degree: {smallestdegval}")
+        log.info(f"the node numbers with the smallest degree : {mindegnodes}")
+        startingnodes = mindegnodes
+    elif startingvertices == "max":
+        largestdegval = max(deglst)
+        maxdegnodes = [i for i, x in enumerate(deglst) if x == max(deglst)]
+        log.info(f"the largest degree: {largestdegval}")
+        log.info(f"the node numbers with the largest degree : {maxdegnodes}")
+        startingnodes = maxdegnodes
+    if dangn > 0 and dangn <=len(startingnodes):
+       log.info(f"There are multiple nodes for starting: {startingnodes}, so you can choose one starting node to be focused.")
+    elif dangn == 0:
+       log.info(f"There is only a single node for starting: {startingnodes}")
+    else:
+       msg = f"the dangn value exceeds the number of the starting nodes."
+       log.error(msg)
+       raise TypeError(msg)
     gammaval = 0
-    allresultlist_i = []
-    allresult_i = []
-    mifdi_i = []
-    logmiflist =[]
-    reachedlist =[]
-    reachednodesfromeachstartingnode = []
-    other_targets = [t for t in all_targets if t != startingnodes[i]]
-    remainingnodes = other_targets
-    while gammaval < gamma_threshold:
-         log.info(f"Starting node of this step {gammaval}: {startingnodes[i]}")
-         log.info(f"Remaining target of this step {gammaval} for the starting node {startingnodes[i]}: {remainingnodes}")
-         mifsteps = [[startingnodes[i], j, MiF(adj_matrix, startingnodes[i], j, beta, gammaval)] for j in remainingnodes]
-         log.info(f"MiF steps for the starting node {startingnodes[i]}: {mifsteps}")
-         log.info(f"The  number of MiF steps for the starting node {startingnodes[i]}: {len(mifsteps)}")
-         reached = [x for i, x in enumerate(mifsteps) if x[2]!= np.float64(0.0)]
-         log.info(f"reached nodes for the starting node {startingnodes[i]}: {reached}")
-         log.info(f"The  number of reached nodes for the starting node {startingnodes[i]}: {len(reached)}")
-         logresultinfo =  [[i[0], i[1], math.log(i[2])] for i in reached]
-         log.info(f"Current gamma: {gammaval}, [Starting node, Reached node, Log(MiF)]: {logresultinfo}")
-         logvals = [x[2] for i, x in enumerate(logresultinfo)]
-         logmiflist.append(logvals)
-         reachednodes = [x[1] for i, x in enumerate(logresultinfo)]
-         reachedlist = sorted(reachedlist + reachednodes)
-         log.info(f"reachedlist:{reachedlist}")
-         reachednodesfromeachstartingnode = reachednodesfromeachstartingnode + reachedlist
-         reachednodesfromeachstartingnode = sorted(set(reachednodesfromeachstartingnode))
-         log.info(f"list of nodes that, once reached, should be skipped without going any further, i.e. reachednodesskip: {reachednodesfromeachstartingnode}")
-         remainingnodes = [x for i, x in enumerate(remainingnodes) if x not in reachednodesfromeachstartingnode]
-         log.info(f"list of nodes that remain to be reached, i.e. remainingnodes: {remainingnodes}")
-         allresult_i = sorted(logresultinfo + [[startingnodes[i], startingnodes[i], 0.0]],  key=lambda x: x[1])
-         allresultlist_i = allresultlist_i + allresult_i
-         allresultlist_i = [list(t) for t in list(dict.fromkeys(tuple(row) for row in sorted(allresultlist_i)))]
-         log.info(f"semifinal allresult for {startingnodes[i]}: {allresultlist_i}")
-         if len(mifsteps) == len(reached):
-             log.info(f"Gamma reached the maximum values, since all the nodes have been reached from the starting node {startingnodes[i]}.")
-             allresultlist_i = allresultlist_i + allresult_i
-             allresultlist_i = [list(t) for t in list(dict.fromkeys(tuple(row) for row in sorted(allresultlist_i)))]
-             log.info(f"final allresult for {startingnodes[i]}: {allresultlist_i}")
-             mifval_i = [x[2] for i, x in enumerate(allresult_i)]
-             log.info(f"mifval_i : {mifval_i}")
-             log.info(f"final MiFDI value for {startingnodes[i]}: {mifval_i} for the starting node {startingnodes[i]}.")
-             allresultlist = allresultlist + [allresultlist_i]
-             mifdilist = mifdilist + [mifval_i]
-             log.info(f"final allresult for {startingnodes}: {allresultlist}")
-             i = i + 1
-             break
-         gammaval = gammaval + 1
-         allresultlist =[row for row in allresultlist]
-         mifdilist = [[inner[2] for inner in group] for group in allresultlist]
-  if dangn ==0 or dangn <=len(startingnodes):
-      if allstartinginfo == 0:
-          return allresultlist[dangn], mifdilist[dangn]
-      else:
-          return allresultlist, mifdilist
-  else:
-     msg = f"the dangn value has something wrong."
-     log.error(msg)
-     raise TypeError(msg)
+    logmifmeanlist =[]
+    focusedstarting = startingnodes[dangn]
+    log.info(f"The focused starting node is: {focusedstarting}")
+    all_targets = range(len(deglst))
+    allresultlist = []
+    mifdilist = []
+    for i in range(0, len(startingnodes)):
+        gammaval = 0
+        allresultlist_i = []
+        allresult_i = []
+        mifdi_i = []
+        logmiflist =[]
+        reachedlist =[]
+        reachednodesfromeachstartingnode = []
+        other_targets = [t for t in all_targets if t != startingnodes[i]]
+        remainingnodes = other_targets
+        while gammaval < gamma_threshold:
+            log.info(f"Starting node of this step {gammaval}: {startingnodes[i]}")
+            log.info(f"Remaining target of this step {gammaval} for the starting node {startingnodes[i]}: {remainingnodes}")
+            mifsteps = [[startingnodes[i], j, MiF(adj_matrix, startingnodes[i], j, beta, gammaval)] for j in remainingnodes]
+            log.info(f"MiF steps for the starting node {startingnodes[i]}: {mifsteps}")
+            log.info(f"The  number of MiF steps for the starting node {startingnodes[i]}: {len(mifsteps)}")
+            reached = [x for i, x in enumerate(mifsteps) if x[2]!= np.float64(0.0)]
+            log.info(f"reached nodes for the starting node {startingnodes[i]}: {reached}")
+            log.info(f"The  number of reached nodes for the starting node {startingnodes[i]}: {len(reached)}")
+            logresultinfo =  [[i[0], i[1], math.log(i[2])] for i in reached]
+            log.info(f"Current gamma: {gammaval}, [Starting node, Reached node, Log(MiF)]: {logresultinfo}")
+            logvals = [x[2] for i, x in enumerate(logresultinfo)]
+            logmiflist.append(logvals)
+            reachednodes = [x[1] for i, x in enumerate(logresultinfo)]
+            reachedlist = sorted(reachedlist + reachednodes)
+            log.info(f"reachedlist:{reachedlist}")
+            reachednodesfromeachstartingnode = reachednodesfromeachstartingnode + reachedlist
+            reachednodesfromeachstartingnode = sorted(set(reachednodesfromeachstartingnode))
+            log.info(f"list of nodes that, once reached, should be skipped without going any further, i.e. reachednodesskip: {reachednodesfromeachstartingnode}")
+            remainingnodes = [x for i, x in enumerate(remainingnodes) if x not in reachednodesfromeachstartingnode]
+            log.info(f"list of nodes that remain to be reached, i.e. remainingnodes: {remainingnodes}")
+            allresult_i = sorted(logresultinfo + [[startingnodes[i], startingnodes[i], 0.0]],  key=lambda x: x[1])
+            allresultlist_i = allresultlist_i + allresult_i
+            allresultlist_i = [list(t) for t in list(dict.fromkeys(tuple(row) for row in sorted(allresultlist_i)))]
+            log.info(f"semifinal allresult for {startingnodes[i]}: {allresultlist_i}")
+            if len(mifsteps) == len(reached):
+                log.info(f"Gamma reached the maximum values, since all the nodes have been reached from the starting node {startingnodes[i]}.")
+                allresultlist_i = allresultlist_i + allresult_i
+                allresultlist_i = [list(t) for t in list(dict.fromkeys(tuple(row) for row in sorted(allresultlist_i)))]
+                log.info(f"final allresult for {startingnodes[i]}: {allresultlist_i}")
+                mifval_i = [x[2] for i, x in enumerate(allresult_i)]
+                log.info(f"mifval_i : {mifval_i}")
+                log.info(f"final MiFDI value for {startingnodes[i]}: {mifval_i} for the starting node {startingnodes[i]}.")
+                allresultlist = allresultlist + [allresultlist_i]
+                mifdilist = mifdilist + [mifval_i]
+                log.info(f"final allresult for {startingnodes}: {allresultlist}")
+                i = i + 1
+                break
+            gammaval = gammaval + 1
+            allresultlist =[row for row in allresultlist]
+            mifdilist = [[inner[2] for inner in group] for group in allresultlist]
+    if dangn ==0 or dangn <=len(startingnodes):
+        if allstartinginfo == 0:
+            return allresultlist[dangn], mifdilist[dangn]
+        else:
+            return allresultlist, mifdilist
+    else:
+        msg = f"the dangn value has something wrong."
+        log.error(msg)
+        raise TypeError(msg)
 
 def MiFDI(adjacencymatrixchecked, startingvertices="min", dangn = 0, beta = 0.2, gamma_threshold = 10, allstartinginfo = 0, loop = 0, logger=None):
     adj_matrix = _prepare_adj_matrix(adjacencymatrixchecked)
