@@ -1,4 +1,4 @@
-def test_rmcl_sr_mcl_with_dataset():
+def test_rmcl_srmcl_with_dataset():
     from markovrcnet.datasets import load_all_adjmats
     import markovrcnet.mcl as mcl
     mats = load_all_adjmats()
