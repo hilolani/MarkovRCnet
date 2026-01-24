@@ -360,7 +360,8 @@ def find_all_in_dict_lists(
             result.append((key, lst))
     return result
 
-def clusinfo_from_nodes(clustering_result, node):
+def clusinfo_from_nodes(clustering_result, node, logger = None):
+  log = resolve_logger(logger, "mcl")
   if type(clustering_result) == dict:
     return find_all_in_dict_lists(clustering_result, node)
   elif  type(clustering_result) == tuple or type(clustering_result) == list:
@@ -368,7 +369,7 @@ def clusinfo_from_nodes(clustering_result, node):
   else:
     return []  
 
-def append_hub_to_recluscore(rmclresultcore,hubnumlist):
+def append_hub_to_recluscore(rmclresultcore, hubnumlist, logger = None):
     log = resolve_logger(logger, "mcl")
     lenrmclresultcore = len(rmclresultcore)
     if type(hubnumlist) == int:
@@ -376,7 +377,7 @@ def append_hub_to_recluscore(rmclresultcore,hubnumlist):
         lentobeadded = 1
     elif type(hubnumlist) == list:
         tobeadded = hubnumlist
-        lentobeadded = len(tobeadded)    
+        lentobeadded = len(tobeadded)
     for i in range(lentobeadded):
         rmclresultcore[lenrmclresultcore + i] = [tobeadded[i]]
         log.debug(f"append hub index: {i}")
