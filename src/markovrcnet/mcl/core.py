@@ -369,6 +369,7 @@ def clusinfo_from_nodes(clustering_result, node):
     return []  
 
 def append_hub_to_recluscore(rmclresultcore,hubnumlist):
+    log = resolve_logger(logger, "mcl")
     lenrmclresultcore = len(rmclresultcore)
     if type(hubnumlist) == int:
         tobeadded = [hubnumlist]
