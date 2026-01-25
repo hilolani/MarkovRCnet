@@ -28,6 +28,7 @@ def load_all_adjmats():
         heterophilly=str(base / "heterophilly.mtx"),
         homophilly=str(base / "homophilly.mtx"),
         karateclub=str(base / "karateclub.mtx"),
+        eat=str(base / "eat.mtx"),
         scalefree=str(base / "scalefree.mtx"),
         DESCR="Toy adjacency matrices in Matrix Market format",
     )
