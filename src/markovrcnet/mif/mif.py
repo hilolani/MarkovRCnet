@@ -8,14 +8,9 @@ from typing import Optional
 from markovrcnet.utils.logging import resolve_logger
 from markovrcnet.io import load_adjacency
 from markovrcnet.utils.sparse import SafeCSR
+from markovrcnet.utils.adjmatrix import _prepare_adj_matrix
 
 CONST_COEFFICIENT_ARRAY = (1, 1.618033988749895, 1.8392867552141607, 1.9275619754829254, 1.9659482366454855, 1.9835828434243263, 1.9919641966050354, 1.9960311797354144, 1.9980294702622872, 1.9990186327101014)
-
-def _prepare_adj_matrix(adjacencymatrixchecked):
-    if isinstance(adjacencymatrixchecked, SafeCSR):
-        return adjacencymatrixchecked.copy()
-    else:
-        return load_adjacency(adjacencymatrixchecked)
 
 def MiF_ZeroBasedIndex(adj_matrix, x, y, beta, gamma, logger=None):
     """
@@ -32,7 +27,6 @@ def MiF_ZeroBasedIndex(adj_matrix, x, y, beta, gamma, logger=None):
     log = resolve_logger(logger, "MiF")
     val = 0
     coefficientlist = list(CONST_COEFFICIENT_ARRAY)
-    #adj_matrix = adjacencymatrixchecked
     alphalist = [(1 / coefficientlist[gamma]) ** (i + 1) for i in range(0, gamma + 1)]
     i = None
     tmat = {0: adj_matrix}
@@ -65,7 +59,6 @@ def MiF_OneBasedIndex(adj_matrix, x, y, beta, gamma, logger=None):
     val = 0
     coefficientlist = list(CONST_COEFFICIENT_ARRAY)
     log.info(f"Here, all integer values are assumed to be 1-based indexes, i.e. data and parameters --including numbers and gamma-- that are counted starting from 1.In other words, it is assumed that a sparse matrix with a 1-based index created in MATLAB, Mathematica, Julia, Fortran, R, etc. was input here.")
-    #adj_matrix = adjacencymatrixchecked
     alphalist = [(1 / coefficientlist[gamma - 1]) ** (i + 1) for i in range(0, gamma)]
     i = None
     tmat = {0: adj_matrix}
@@ -104,7 +97,6 @@ def MiF_broadcast_withloop(adj_matrix, startingvertex, beta = 0.5, gamma_thresho
     )
     np.set_printoptions(precision=10, floatmode='fixed')
     log = resolve_logger(logger, "MiF")
-    #adj_matrix = adjacencymatrixchecked
     Gobj = nx.from_scipy_sparse_array(adj_matrix)
     degdicformat = nx.degree(Gobj)
     deglst =list([degdicformat[i] for i in range(0,len(degdicformat))])
@@ -146,7 +138,6 @@ def MiF_broadcast_withoutloop(adj_matrix, startingvertex, beta = 0.5, gamma_thre
         "If you want to input a file path, use MiF_broadcast(..., loop=0)."
     )
     log = resolve_logger(logger, "MiF")
-    #adj_matrix = adjacencymatrixchecked
     Gobj = nx.from_scipy_sparse_array(adj_matrix)
     degdicformat = nx.degree(Gobj)
     deglst =list([degdicformat[i] for i in range(0,len(degdicformat))])
@@ -224,7 +215,6 @@ def MiFDI_withloop(adj_matrix, startingvertices = "min", dangn = 0, beta = 0.2, 
         "If you want to input a file path, use MiFDI(..., loop=1)."
     )
     log = resolve_logger(logger, "MiF")
-    #adj_matrix = adjacencymatrixchecked
     Gobj = nx.from_scipy_sparse_array(adj_matrix)
     degdicformat = nx.degree(Gobj)
     deglst =list([degdicformat[i] for i in range(0,len(degdicformat))])
@@ -316,7 +306,6 @@ def MiFDI_withoutloop(adj_matrix, startingvertices = "min", dangn = 0, beta = 0.
         "If you want to input a file path, use MiFDI(..., loop=1)."
     )
     log = resolve_logger(logger, "MiF")
-    #adj_matrix = adjacencymatrixchecked
     Gobj = nx.from_scipy_sparse_array(adj_matrix)
     degdicformat = nx.degree(Gobj)
     deglst =list([degdicformat[i] for i in range(0,len(degdicformat))])
