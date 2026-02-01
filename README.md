@@ -1,5 +1,6 @@
 # MarkovRCnet
-Markov clustering + MiF metric
+
+MarkovRCnet, which stands for Markovian Refined Complex networks, is a Python package for analyzing network structure using Markov-based clustering and reachability measures, integrating MCL, refined MCL variants, and the MiF family of metrics.
 
 # Overview
 
@@ -98,9 +99,177 @@ MiFDI provides a compact representation of how rapidly relational similarity dec
 
 # Usage
 
-This section will be added after MarkovRCNet has been fully integrated and validated.
+## Install
 
-#References
+After publishing on PyPI, you can install MarkovRCnet via:
+
+    pip install markovrcnet
+
+(If you are using Google Colab, prefix `pip` with `!`.)
+
+## Input
+
+In this package, all public APIs accept either a file path or a SafeCSR object defined in utils.sparse for specifying the adjacency matrix of a graph. Not only Matrix Market format sparse matrices (.mtx files), but also sparse matrices in other formats, and even dense matrices (though not recommended), can be automatically converted into SafeCSR object by io.load_matrix. Dense matrices are supported for convenience, but sparse representations are strongly recommended for performance and memory efficiency.
+
+Input normalization is handled consistently across MCL and MiF, and internal functions operate on SafeCSR objects only. Input normalization (path / SafeCSR) and copy control are handled exclusively at API entry points.
+
+## MCL and MiF
+
+This section demonstrates a minimal yet representative workflow of MarkovRCnet: loading an adjacency matrix, performing Markov Clustering (MCL), and analyzing intra- and inter-cluster reachability using MiF. The same workflow applies to RMCL and MiFDI, which extend MCL and MiF by incorporating refinement and directional information. See the following examples for their basic usage.
+
+We use the classic Zachary’s Karate Club network as a small but non-trivial example. In this example, MiF values from a dangling node inside its own MCL cluster are significantly larger than those to nodes in the other cluster. This illustrates that MiF captures cluster-aware reachability consistent with the MCL partition.
+
+
+    from markovrcnet.datasets import load_all_adjmats
+
+    from markovrcnet.mcl import mclprocess
+
+    from markovrcnet.mif import MiF
+
+    from markovrcnet.io.load_matrix import load_adjacency
+
+    import numpy as np
+
+    import networkx as nx
+
+    mats = load_all_adjmats()
+
+
+    karatec = load_adjacency(mats["karateclub"])
+
+
+    # Analysis of Karate Club
+
+    Gobj = nx.from_scipy_sparse_array(karatec)
+
+    diameter_karatec = nx.diameter(Gobj)
+
+    print(f"The diameter of the Karate Club is: {diameter_karatec}")
+
+    # The diameter of the Karate Club is: 5
+
+    deglist = dict(nx.degree(Gobj))
+
+    min_deg_node = min(deglist, key=deglist.get)
+
+    print(f"The vertex number of the smallest degree is: {min_deg_node}")
+
+    # The vertex number of the smallest degree is: 11
+
+
+    # MCL
+
+    result_karate_mcl = mclprocess(karatec)
+
+    print(result_karate_mcl)
+
+    # {0: [0, 1, 3, 4, 5, 6, 7, 10, 11, 12, 13, 16, 17, 19, 21], 1: [2, 8, 9, 14, 15, 18, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33]}
+
+
+    # MiF
+
+    # Select as the starting node the vertex 11 belonging to the cluster number 0.
+
+    # Remove the starting node itself from the target list
+
+    result_karate_mcl[0].remove(min_deg_node)
+
+    mif_clus0 = [MiF(karatec, min_deg_node, i, 0.5, diameter_karatec) for i in result_karate_mcl[0]]
+
+    mif_clus1 = [MiF(karatec, min_deg_node, i, 0.5, diameter_karatec) for i in result_karate_mcl[1]]
+
+    print(
+
+        f"The mean MiF value of the cluster 0 from a dangling node inside is large: "
+
+        f"{np.mean(mif_clus0)}"
+
+    )
+
+    #  0.03705702889419532
+
+    print(
+
+        f"The mean MiF value of cluster 1 from that exterior node is small: "
+
+        f"{np.mean(mif_clus1)}"
+
+    )
+
+    #  0.0044844434956278776
+
+    #  This illustrates that MiF captures cluster-aware reachability consistent with the MCL partition.
+
+
+## The extension of workflow
+
+The same workflow applies to RMCL and MiFDI, which extend MCL and MiF by incorporating refinement and directional information.
+
+See the following examples for their basic usage.
+
+## RMCL functions
+
+The RMCL addresses a well-known limitation of standard MCL, i.e. issue of severe cluster size imbalance particularly pronounced in graphs exhibiting scale-free and heterophilic characteristics. Therefore, it is mainly applicable when the size (number of elements) of the largest cluster output as a result of MCL exceeds a certain threshold (by default, when the number of elements per cluster exceeds twice the standard deviation).
+
+### Branching_Rmcl
+
+The branching_rmcl function enables the division of such oversized core clusters into appropriately sized subgraphs. It achieves this by introducing latent adjacency relationships between Markov clusters, thereby reconstructing a more informative network structure.
+
+As suitable for the demonstration purpose, the following example doesn't use Karate club network, but "scalefree.mtx" (stored in data repository), which was created based on the Barabási–Albert (BA) model, starting with a complete graph of 5 nodes for which additional nodes with degree 5 repeatedly underwent preferential attachment until the total number of vertices reaches 100. The branching_rmcl() also supports the merging of small, non-core clusters through a process called reverse branching.
+
+### SRmcl and Mixed Rmcl
+
+Simply-repeated MCL, abbreviated as srmcl, operates as follows: if a core cluster exists, it extracts the hub with the highest degree from within it and then re-runs MCL iteratively only on the core cluster.
+
+The mixed_rmcl applies srmcl to the core cluster and, for non-core ones, applies reverse branching rmcl.
+
+
+    # Scale free graph.
+
+    from markovrcnet.datasets import load_all_adjmats
+
+    import markovrcnet.mcl as mcl
+
+
+    mats = load_all_adjmats()
+
+    sf = mats["scalefree"]
+
+    cluslist = mcl.mclprocess(sf)
+
+    print(f"The MCL result of 'scalefree' graph is: {cluslist}")
+
+    # The MCL result of 'scalefree' graph is: {0: [0, 11, 18, 21, 49, 80], 1: [3, 48, 57, 72], 2: [1, 2, 4, 5, 9, 10, 12, 13, 14, 15, 16, 17, 23, 24, 25, 26, 28, 29, 33, 37, 39, 41, 43, 45, 50, 51, 52, 54, 58, 59, 60, 61, 62, 63, 68, 70, 75, 79, 85, 86, 88, 89, 90, 92, 93, 96, 98], 3: [6, 46], 4: [7, 66, 77, 97], 5: [8, 27, 32, 42, 53, 55, 56, 64, 67, 76, 78, 83, 84, 87, 94, 95], 6: [19, 30, 69], 7: [20, 38], 8: [22, 47, 81], 9: [31], 10: [35], 11: [36, 40, 65], 12: [44], 13: [73], 14: [82], 15: [34, 71, 74, 91, 99]}
+
+
+    result_branching = mcl.branching_rmcl(cluslist, sf)
+
+    print(f"The Branching RMCL result of 'scalefree' graph under the default settings is: {result_branching}")
+
+    # {0: [1, 2, 5, 9, 10, 12, 13, 14, 15, 16, 17, 23, 24, 25, 28, 29, 33, 37, 39, 41, 45, 50, 51, 52, 54, 58, 59, 60, 61, 62, 63, 68, 70, 85, 88, 90, 92, 93, 98], 1: [26], 2: [43], 3: [75], 4: [79], 5: [86], 6: [89], 7: [96], 8: [4]}
+
+
+    result_sr = mcl.sr_mcl(cluslist, sf)
+
+    print(f"The SR MCL result under the default settings is : {result_sr}")
+
+    # {0: [1, 2, 4, 5, 9, 10, 12, 13, 14, 15, 17, 24, 25, 26, 28, 29, 33, 37, 39, 41, 50, 52, 54, 60, 61, 62, 63, 68, 75, 79, 85, 86, 88, 92, 98], 1: [16, 89], 2: [23, 93], 3: [43, 58], 4: [45, 70, 90, 96], 5: [51, 59]}
+
+
+    result_mixed =  mcl.mixed_rmcl(cluslist, sf, threspruning = 3.0, branching = False)
+
+    print(f"The Mixed MCL result under the default settings but changing the threshold of latent adjacency weight into 3.0 and without applying reverse branching to non-core clusters is : {mcl.mcllist_to_mcldict(result_mixed)}")
+
+    # {0: [0, 11, 18, 21, 49, 80], 1: [1, 2, 4, 5, 9, 10, 12, 13, 14, 15, 17, 24, 25, 26, 28, 29, 33, 37, 39, 41, 50, 52, 54, 60, 61, 62, 63, 68, 75, 79, 85, 86, 88, 92, 98], 2: [3, 48, 57, 72], 3: [6, 46], 4: [7, 66, 77, 97], 5: [8, 27, 32, 42, 53, 55, 56, 64, 67, 76, 78, 83, 84, 87, 94, 95], 6: [16, 89], 7: [19, 30, 69], 8: [20, 38], 9: [22, 47, 81], 10: [23, 93], 11: [31], 12: [34, 71, 74, 91, 99], 13: [35], 14: [36, 40, 65], 15: [43, 58], 16: [44], 17: [45, 70, 90, 96], 18: [51, 59], 19: [73], 20: [82]}
+
+
+## Notes
+
+For more detailed information about the options for the functions introduced here, or for usage of other functions, please refer to the following web page.
+
+    https://sites.google.com/site/akamatitechlab/markovrcnet
+
+# References
 
 Stijn van Dongen, Graph Clustering by Flow Simulation, 2000 https://dspace.library.uu.nl/bitstream/handle/1874/848/full.pdf?sequence=1&isAllowed=y
 
