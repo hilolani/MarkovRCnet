@@ -2,6 +2,48 @@
 
 MarkovRCnet, which stands for Markovian Refined Complex networks, is a Python package for analyzing network structure using Markov-based clustering and reachability measures, integrating MCL, refined MCL variants, and the MiF family of metrics.
 
+# About
+
+MarkovRCnet is a Python library (not a CLI tool), designed for research and experimental use.
+It is not a deep learning framework.
+Instead, it provides classical Markov-based graph clustering and influence metrics,
+intended to be composed with other graph learning or GNN pipelines.
+
+**Input**
+- `scipy.sparse.csr_matrix` (adjacency matrix)
+
+**Output**
+- `dict[int, list[int]]` (cluster assignments)
+- `float` (influence / score metrics)
+
+# Quick Start
+
+MarkovRCnet is a Python *library*.
+Please install it in a virtual environment using `pip`.
+`pipx` is **not recommended**, as this package is not a CLI tool.
+
+## Setup
+
+```bash
+sudo apt install python3-pip python3-venv
+python3 -m venv venv
+source venv/bin/activate
+```
+
+Install
+
+    pip install markovrcnet
+
+Example
+
+    from markovrcnet.datasets import load_all_adjmats
+    from markovrcnet.mcl import mclprocess
+
+    mats = load_all_adjmats()
+    clusters = mclprocess(mats["karateclub"])
+    print(clusters)
+
+
 # Overview
 
 MarkovRCNet is a Python library for analyzing complex networks using Markov random walk–based methods.
