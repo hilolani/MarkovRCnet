@@ -264,21 +264,20 @@ The mixed_rmcl applies srmcl to the core cluster and, for non-core ones, applies
 
 ## Docker (Reproducible environment)
 
-For reproducible experiments, MarkovRCnet can be used inside a Docker container.
-The following example builds a minimal environment and checks that the API works.
+You can also run MarkovRCnet using Docker without installing Python dependencies.
 
 ```bash
-docker build -t markovrcnet .
-docker run --rm markovrcnet python -c "from markovrcnet.mif import MiF; print(MiF)"
-This ensures that MarkovRCnet can be installed and executed in a clean,
-isolated environment without relying on the host Python setup.
-
+docker pull akamahilolani/markovrcnet:1.0.0
+docker run --rm akamahilolani/markovrcnet:1.0.0 \
+  python -c "from markovrcnet.mif import MiF; print(MiF)"
+```
 
 ## Notes
 
 For more detailed information about the options for the functions introduced here, or for usage of other functions, please refer to the following web page.
 
     https://sites.google.com/site/akamatitechlab/markovrcnet
+
 
 # References
 
