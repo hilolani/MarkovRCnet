@@ -1,13 +1,20 @@
 FROM python:3.11-slim
 
-# 作業ディレクトリ
-WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# 必要最低限
-RUN pip install --no-cache-dir --upgrade pip
+WORKDIR /workspace
 
-# MarkovRCnet を PyPI から
-RUN pip install --no-cache-dir markovrcnet
+# system deps (scipy 安定用)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# 動作確認用（オプション）
-CMD ["python", "-c", "from markovrcnet.mif import MiF; print(MiF)"]
+# pip update
+RUN pip install --upgrade pip
+
+# install from PyPI (FIXED VERSION)
+RUN pip install markovrcnet==1.1.1
+
+CMD ["python"]
+
