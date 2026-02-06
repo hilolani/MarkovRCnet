@@ -319,8 +319,8 @@ docker run --rm akamahilolani/markovrcnet:latest \
 ### Jupyter Docker
 
 ```bash
+docker pull akamahilolani/markovrcnet-jupyter:latest
 docker run --rm -it -p 10001:10001 akamahilolani/markovrcnet-jupyter:latest
-
 ```
 Open the printed URL in your browser.
 
