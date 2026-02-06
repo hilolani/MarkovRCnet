@@ -1,0 +1,30 @@
+# Dockerfile.jupyter
+FROM python:3.11-slim
+
+# ===== 基本設定 =====
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /workspace
+
+# ===== OS 依存パッケージ =====
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    curl \
+ && rm -rf /var/lib/apt/lists/*
+
+# ===== Python パッケージ =====
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir \
+    jupyterlab \
+    markovrcnet==1.1.1
+
+# ===== Jupyter 設定 =====
+EXPOSE 10001
+
+CMD ["jupyter", "lab",
+     "--ip=0.0.0.0",
+     "--port=10001",
+     "--no-browser",
+     "--allow-root"]
