@@ -304,15 +304,25 @@ The mixed_rmcl applies srmcl to the core cluster and, for non-core ones, applies
 
     # {0: [0, 11, 18, 21, 49, 80], 1: [1, 2, 4, 5, 9, 10, 12, 13, 14, 15, 17, 24, 25, 26, 28, 29, 33, 37, 39, 41, 50, 52, 54, 60, 61, 62, 63, 68, 75, 79, 85, 86, 88, 92, 98], 2: [3, 48, 57, 72], 3: [6, 46], 4: [7, 66, 77, 97], 5: [8, 27, 32, 42, 53, 55, 56, 64, 67, 76, 78, 83, 84, 87, 94, 95], 6: [16, 89], 7: [19, 30, 69], 8: [20, 38], 9: [22, 47, 81], 10: [23, 93], 11: [31], 12: [34, 71, 74, 91, 99], 13: [35], 14: [36, 40, 65], 15: [43, 58], 16: [44], 17: [45, 70, 90, 96], 18: [51, 59], 19: [73], 20: [82]}
 
-## Docker (Reproducible environment)
+## Docker
+
+### Docker as Reproducible environment
 
 You can also run MarkovRCnet using Docker without installing Python dependencies.
 
 ```bash
-docker pull akamahilolani/markovrcnet:1.0.0
-docker run --rm akamahilolani/markovrcnet:1.0.0 \
+docker pull akamahilolani/markovrcnet:latest
+docker run --rm akamahilolani/markovrcnet:latest \
   python -c "from markovrcnet.mif import MiF; print(MiF)"
 ```
+
+### Jupyter Docker
+
+```bash
+docker run --rm -it -p 10001:10001 akamahilolani/markovrcnet-jupyter:latest
+
+```
+Open the printed URL in your browser.
 
 ## Notes
 
