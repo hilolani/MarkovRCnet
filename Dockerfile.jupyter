@@ -23,8 +23,4 @@ RUN pip install --no-cache-dir --upgrade pip \
 # ===== Jupyter 設定 =====
 EXPOSE 10001
 
-CMD ["jupyter", "lab",
-     "--ip=0.0.0.0",
-     "--port=10001",
-     "--no-browser",
-     "--allow-root"]
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=10001", "--no-browser", "--allow-root"]
