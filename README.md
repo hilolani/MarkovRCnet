@@ -324,6 +324,57 @@ docker run --rm -it -p 10001:10001 akamahilolani/markovrcnet-jupyter:latest
 ```
 Open the printed URL in your browser.
 
+## PyTorch Geometric integration (experimental)
+
+`markovrcnet` provides a lightweight helper module to interface with
+[PyTorch Geometric (PyG)](https://pytorch-geometric.readthedocs.io/).
+
+This allows Markov Clustering (MCL) results and MiF-based quantities to be directly used as node labels and node features in GNN pipelines.
+
+> **Note**
+> PyTorch and PyTorch Geometric are optional dependencies.
+> This module is imported only when explicitly used.
+
+### Example: Karate Club network
+
+```python
+from torch_geometric.data import Data
+
+from markovrcnet.utils.pyg import (
+    csr_to_edge_index,
+    clusters_to_node_labels,
+    mifdi_to_node_features,
+)
+
+from markovrcnet.datasets import load_all_adjmats
+from markovrcnet.mcl import mclprocess
+import markovrcnet.mif as mif
+from markovrcnet.io import load_adjacency
+
+# load adjacency matrix
+mats = load_all_adjmats()
+adj = load_adjacency(mats["karateclub"])
+
+# edge index for PyG
+edge_index = csr_to_edge_index(adj)
+
+# node labels from MCL
+clusters = mclprocess(mats["karateclub"])
+y = clusters_to_node_labels(clusters, adj.shape[0])
+
+# node features from MiFDI
+mifdi_raw = mif.MiFDI(mats["karateclub"], dangn=0)[0]
+x = mifdi_to_node_features(mifdi_raw, adj.shape[0])
+
+# PyG Data object
+data = Data(x=x, edge_index=edge_index, y=y)
+```
+
+The resulting data object can be directly used in standard PyTorch Geometric models.
+
+This interface is designed to be compatible with downstream graph learning libraries such as PyTorch Geometric and Graphein.
+
+
 ## Notes
 
 For more detailed information about the options for the functions introduced here, or for usage of other functions, please refer to the following web page.
