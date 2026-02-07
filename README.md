@@ -370,7 +370,9 @@ x = mifdi_to_node_features(mifdi_raw, adj.shape[0])
 data = Data(x=x, edge_index=edge_index, y=y)
 ```
 
-The resulting data object can be directly used in standard PyTorch Geometric models.
+The resulting data object can be directly used in standard PyTorch Geometric models. 
+
+A convenience function `adjmats_to_pyg_data` is provided to construct PyTorch Geometric `Data` objects directly from MarkovRCnet outputs.
 
 This interface is designed to be compatible with downstream graph learning libraries such as PyTorch Geometric and Graphein.
 
