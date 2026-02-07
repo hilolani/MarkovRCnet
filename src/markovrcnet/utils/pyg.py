@@ -87,3 +87,35 @@ def mifdi_to_node_features(
         x[node, 0] = value
 
     return torch.from_numpy(x)
+
+
+def adjmats_to_pyg_data(
+    adj_csr,
+    clusters=None,
+    mifdi_raw=None,
+):
+    """
+    Convert markovrcnet adjacency and results into PyG Data.
+
+    Parameters
+    ----------
+    adj_csr : scipy.sparse.csr_matrix
+    clusters : dict[int, list[int]], optional
+        Output of mclprocess
+    mifdi_raw : optional
+        Output of MiFDI(...)[0]
+
+    Returns
+    -------
+    torch_geometric.data.Data
+    """
+    edge_index = csr_to_edge_index(adj_csr)
+    data = Data(edge_index=edge_index)
+
+    if clusters is not None:
+        data.y = clusters_to_node_labels(clusters, adj_csr.shape[0])
+
+    if mifdi_raw is not None:
+        data.x = mifdi_to_node_features(mifdi_raw, adj_csr.shape[0])
+
+    return data
