@@ -14,6 +14,7 @@ from .pyg import(
     csr_to_edge_index,
     clusters_to_node_labels,
     mifdi_to_node_features,
+    adjmats_to_pyg_data,
 )
 
 __all__ = [
@@ -23,4 +24,5 @@ __all__ = [
     "csr_to_edge_index",
     "clusters_to_node_labels",
     "mifdi_to_node_features",
+    "adjmats_to_pyg_data",
 ]
