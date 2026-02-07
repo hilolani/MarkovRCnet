@@ -119,3 +119,13 @@ def adjmats_to_pyg_data(
         data.x = mifdi_to_node_features(mifdi_raw, adj_csr.shape[0])
 
     return data
+
+def mifdi_to_node_features(mifdi_raw, num_nodes):
+    """
+    mifdi_raw: output of MiFDI(...)[0]
+               iterable of (cluster, node, value)
+    """
+    x = np.zeros(num_nodes, dtype=np.float32)
+    for _, node, value in mifdi_raw:
+        x[node] = value
+    return torch.from_numpy(x).unsqueeze(1)
