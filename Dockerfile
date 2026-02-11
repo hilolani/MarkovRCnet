@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --upgrade pip
 
 # install from PyPI (FIXED VERSION)
-RUN pip install markovrcnet==1.1.1
+RUN pip install markovrcnet==1.1.4
 
 CMD ["python"]
 
