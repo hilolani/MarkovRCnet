@@ -334,6 +334,9 @@ This allows Markov Clustering (MCL) results and MiF-based quantities to be direc
 > **Note**
 > PyTorch and PyTorch Geometric are optional dependencies.
 > This module is imported only when explicitly used.
+> Run
+>     pip install markovrcnet[gnn]
+> to use the functions in utils/pyg.py.
 
 ### Example: Karate Club network
 
