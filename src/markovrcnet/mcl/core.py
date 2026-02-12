@@ -275,6 +275,7 @@ def sr_mcl(dic_mclresult, originadj, defaultcorenum=0, coreinfoonly = True, logg
 
 def mixed_rmcl(dic_mclresult, originadj, threspruning, defaultcorenum = 0, branching = True, reverse_process = True, coreinfoonly = True, logger = None):
     log = resolve_logger(logger, "mcl")
+    branching_threspruning = threspruning
     core_result = sr_mcl(dic_mclresult, originadj, defaultcorenum, coreinfoonly, logger=logger)
     log.info(f"The core cluster is the target of the SRMCL.")
     log.info(f"The core cluster core_result is: {core_result}")
@@ -283,7 +284,7 @@ def mixed_rmcl(dic_mclresult, originadj, threspruning, defaultcorenum = 0, branc
     log.info(f"Now non core cluster partitioning started")
     if branching == True:
         log.info(f"Reverse branching MCL started.")
-        non_core_result =  branching_rmcl(dic_mclresult, originadj, threspruning, defaultcorenum, reverse_process)
+        non_core_result =  branching_rmcl(dic_mclresult, originadj, branching_threspruning, defaultcorenum, reverse_process)
         log.info(f"non_core_result: {non_core_result}")
         non_core_partition = sorted([sorted(group) for group in  [j for i,j in non_core_result.items()]], key=lambda x: x[0] if x else float('inf'))
         log.info(f"non_core clusters partitioning finished: {non_core_partition}")
