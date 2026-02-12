@@ -284,7 +284,7 @@ def mixed_rmcl(dic_mclresult, originadj, threspruning, defaultcorenum = 0, branc
     log.info(f"Now non core cluster partitioning started")
     if branching == True:
         log.info(f"Reverse branching MCL started.")
-        non_core_result =  branching_rmcl(dic_mclresult, originadj, threspruning = branching_threspruning, defaultcorenum, reverse_process = True)
+        non_core_result = branching_rmcl(dic_mclresult, originadj, defaultcorenum=defaultcorenum, threspruning=branching_threspruning, reverse_process=True, logger=logger)
         log.info(f"non_core_result: {non_core_result}")
         non_core_partition = sorted([sorted(group) for group in  [j for i,j in non_core_result.items()]], key=lambda x: x[0] if x else float('inf'))
         log.info(f"non_core clusters partitioning finished: {non_core_partition}")
