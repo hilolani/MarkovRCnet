@@ -21,8 +21,22 @@ def load_adjacency(adjacencymatrix, logger=None):
         ext = os.path.splitext(path)[1].lower()
 
         if ext == ".mtx":
-            matrix = mmread(path).tocsr()
-            log.info("Loaded .mtx → CSR")
+            A = mmread(path)
+
+            if not issparse(A):
+                A = csr_matrix(A)
+            else:
+                A = A.tocsr()
+
+            A.setdiag(0)
+            A.eliminate_zeros()
+            n_loops = A.diagonal().sum()
+            if n_loops != 0:
+                log.warning(f"Removed {n_loops} self-loop weights from diagonal.")
+
+            matrix = A
+            log.info("Loaded .mtx → CSR (self-loops removed)")
+
 
         elif ext == ".npz":
             loaded = np.load(path, allow_pickle=True)
