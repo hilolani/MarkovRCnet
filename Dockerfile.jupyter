@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --no-cache-dir --upgrade pip \
  && pip install --no-cache-dir \
     jupyterlab \
-    markovrcnet==1.1.4
+    markovrcnet==1.1.5
 
 # ===== Jupyter 設定 =====
 EXPOSE 10001
