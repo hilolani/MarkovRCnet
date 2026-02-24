@@ -206,25 +206,45 @@ def _draw_cluster_panel(panel, clusters, titles, core_nodes, mifvals, G, filenam
     pos = nx.spring_layout(G, seed=42)
 
     for ax, sg, title in zip(axes, subgraphs, titles):
+        nodes = list(sg.nodes())
+
         if panel == "upper":
-            sizes = [G.degree(n) * 20 for n in sg.nodes()]
+            sizes = [G.degree(n) * 20 for n in nodes]
         else:
-            sizes = [mifvals[n] * 200 for n in sg.nodes()]
+            sizes = [mifvals[n] * 200 for n in nodes]
 
         colors = [
             "lightgreen" if n in core_nodes else "lightblue"
-            for n in sg.nodes()
+            for n in nodes
         ]
 
-        nx.draw_networkx(
+        # Draw nodes and edges
+        nx.draw_networkx_nodes(
             sg,
-            pos=pos,
-            ax=ax,
+            pos,
+            nodelist=nodes,
             node_size=sizes,
             node_color=colors,
-            with_labels=False
+            ax=ax
         )
+
+        nx.draw_networkx_edges(
+            sg,
+            pos,
+            ax=ax
+        )
+
+        # --- Node labels (FIX) ---
+        nx.draw_networkx_labels(
+            sg,
+            pos,
+            labels={n: str(n) for n in nodes},
+            font_size=6,
+            ax=ax
+        )
+
         ax.set_title(title)
+        ax.axis("off")
 
     for ax in axes[len(subgraphs):]:
         ax.axis("off")

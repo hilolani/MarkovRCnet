@@ -65,8 +65,8 @@ import random
 # Parameters (match paper settings)
 # =====================================================
 N = 100        # total nodes
-m0 = 3         # initial complete graph size
-m = 1          # edges added per new node
+m0 = 5         # initial complete graph size
+m = 5          # edges added per new node
 SEED = 42
 
 
