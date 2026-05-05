@@ -16,6 +16,24 @@ intended to be composed with other graph learning or GNN pipelines.
 - `dict[int, list[int]]` (cluster assignments)
 - `float` (influence / score metrics)
 
+MarkovRCnet is a diffusion-geometric toolkit for complex network analysis based on Markov chain refinement.
+It provides efficient implementations of Markov clustering (MCL), MiF/MiFDI metrics, and graph-based structural analysis.
+See the accompanying paper for theoretical background:
+
+Hiroyuki Akama (2026), "Revisiting Markov Chain-Based Complex Network Analysis: A Diffusion-Geometric Toolkit with MarkovRCnet", QEIOS.
+
+## Paper
+
+For theoretical details and background, please refer to:
+
+Hiroyuki Akama (2026) 
+*Revisiting Markov Chain-Based Complex Network Analysis: A Diffusion-Geometric Toolkit with MarkovRCnet*
+QEIOS
+DOI: https://doi.org/10.32388/95FJ91
+
+We warmly welcome feedback through the open review system.
+
+
 # Quick Start
 
 MarkovRCnet is a Python *library*.
